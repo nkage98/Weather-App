@@ -3,5 +3,5 @@ node_modules
 utils
 media
 package-lock.json
-static
+static/css/styles.css
 Teste Prático
