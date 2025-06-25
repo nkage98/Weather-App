@@ -1,0 +1,7 @@
+.env
+node_modules
+utils
+media
+package-lock.json
+static
+Teste Prático
