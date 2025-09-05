@@ -5,3 +5,5 @@ media
 package-lock.json
 static/css/styles.css
 Teste Prático
+backend/.env
+backend/node_modules

@@ -13,6 +13,6 @@ const pool = mysql.createPool({
     queueLimit: 0,
 });
 
-console.log('🟢 Banco MySQL conectado');
+console.log('🟢 Database conected succesfully');
 
 export default pool;

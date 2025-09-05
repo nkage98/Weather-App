@@ -20,14 +20,14 @@ const csrfProtection = csrf({ cookie: true });
 //ejs
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
+app.use(express.static(path.join(__dirname, 'static')));
 
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Middlewares
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'middlewares')));
+//app.use(express.static(path.join(__dirname, 'middlewares')));
 
 app.use(csrfProtection);
 
