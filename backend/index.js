@@ -2,11 +2,17 @@ import express from 'express'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import routes from './src/routes/routes.js'
+import cors from 'cors'
+
 
 dotenv.config();
+
 const app = express();
+
 app.use(express.json());
+app.use(cors());
 app.use('/api', routes);
+
 
 const db = process.env.DATABASE_URL
 const PORT = process.env.PORT;

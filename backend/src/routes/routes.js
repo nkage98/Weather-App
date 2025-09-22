@@ -1,34 +1,29 @@
 import express from 'express';
-import getWeatherByCity from "../controllers/weather.controller.js";
+import {weatherController, favoriteCityController, getFavoriteCitiesController, deleteFavoriteCityController} from "../controllers/weather.controller.js";
+import { loginController, registerController, updateUserController, getUserController, deleteUserController } from '../controllers/user.controller.js';
+import auth from '../middlewares/auth.middleware.js';
 
 const routes = express.Router();
 
 // public routes
-routes.get('/weather/', getWeatherByCity);
-routes.get('/weather/:city', getWeatherByCity);
+routes.post('/register', registerController);
 
-// routes.post('/register', (req, res) => {
-//     res.send('User registered');
-// })
-// routes.post('/login', (req, res) => {
-//     res.send('User logged in');
-// })
-// routes.post('/register', (req, res) => {
-//     res.send('User registered');
-// })
+routes.post('/login', loginController);
 
-// // private routes
-// routes.get('/profile/:id', (req, res) => {
-//     res.send('User profile');
-// })
-// routes.put('/profile/:id', (req, res) => {
-//     res.send('User profile updated');
-// })
+routes.get('/weather/city/:city', weatherController);
 
-// routes.get('/weather/favorites', (req, res) => {
-//     res.send('User favorite cities weather');
-// })
+// private routes
+routes.get('/user/', auth, getUserController);
 
+routes.put('/user/', auth, updateUserController);
+
+routes.delete('/user/', auth, deleteUserController);
+
+routes.post('/weather/favorite', auth, favoriteCityController);
+
+routes.get('/weather/favorite', auth, getFavoriteCitiesController);
+
+routes.delete('/weather/favorite', auth, deleteFavoriteCityController);
 
 
 

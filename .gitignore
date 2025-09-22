@@ -1,9 +1,2 @@
-.env
-node_modules
-utils
-media
-package-lock.json
-static/css/styles.css
-Teste Prático
 backend/.env
 backend/node_modules
