@@ -10,9 +10,8 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors()); // Tudo liberado para testes
 app.use('/api', routes);
-
 
 const db = process.env.DATABASE_URL
 const PORT = process.env.PORT;
