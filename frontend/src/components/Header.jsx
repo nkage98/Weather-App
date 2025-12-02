@@ -1,16 +1,32 @@
+import { NavLink } from "react-router-dom";
+
 function Header() {
     return (
         <header>
             <nav>
                 <section>
-                    <p>☀️ Weather App 🌧️</p>
+                    <NavLink  to="/" className={({ isActive }) => (isActive ? "active" : undefined)}>
+                            ☀️ Weather App 🌧️
+                        </NavLink>
                 </section>
                 <ul>
+                    <NavLink  to="/" className={({ isActive }) => (isActive ? "active" : undefined)}>
+                            Início
+                    </NavLink>
                     <li>
-                        <a href="">favoritos</a>
+                        <NavLink  to="/Favorites" className={({ isActive }) => (isActive ? "active" : undefined)}>
+                            Favoritos
+                        </NavLink>
                     </li>
                     <li>
-                        <a href="">Login</a>
+                        <NavLink  to="/Login" className={({ isActive }) => (isActive ? "active" : undefined)}>
+                            Login
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink  to="/Register" className={({ isActive }) => (isActive ? "active" : undefined)}>
+                            Cadastrar-se
+                        </NavLink>
                     </li>
                 </ul>
             </nav>
