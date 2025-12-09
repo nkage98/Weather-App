@@ -7,12 +7,12 @@ function Header() {
     const { user } = useContext(AuthContext);
 
     return (
-        <header>
-            <nav>
+        <header className="header">
+            <nav className="header_nav">
                 <section>
                     <NavLink to="/">☀️ Simple Weather 🌧️</NavLink>
                 </section>
-                <ul>
+                <ul className="header_ul">
                     <li>
                         <NavLink to="/">Início</NavLink>
                     </li>
