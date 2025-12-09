@@ -1,4 +1,3 @@
-
 const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValidEmail = emailRegex.test(email);
@@ -7,7 +6,7 @@ const validateEmail = (email) => {
         return false;
     }
     return true;
-}
+};
 
 const validatePassword = (password) => {
     const minLength = 8;
@@ -23,10 +22,6 @@ const validatePassword = (password) => {
         hasNumber &&
         hasSpecialChar
     );
-}
-
-
-export {  
-    validateEmail, 
-    validatePassword 
 };
+
+export { validateEmail, validatePassword };

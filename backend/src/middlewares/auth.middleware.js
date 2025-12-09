@@ -1,29 +1,30 @@
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const auth = (req, res, next) => {
-    
-    const token = req.headers.authorization;
+    const token = req.cookies?.token;
 
-    if(!token) {
-        return res.status(401).json({message:"Invalid Token."});
+    console.log("Auth Middleware");
+
+    if (!token) {
+        return res.status(401).json({ message: "token not found" });
     }
 
     try {
-        const decoded = jwt.verify(token.replace('Bearer ', ''), JWT_SECRET);
+        const decoded = jwt.verify(token.replace("Bearer ", ""), JWT_SECRET);
 
-        if(!decoded){
-            return res.status(401).json({message:"Invalid Token."});
+        if (!decoded) {
+            return res.status(401).json({ message: "Invalid Token." });
         }
 
         req.userId = decoded.id;
         req.favcity = decoded.favoriteCity;
     } catch (error) {
-        return res.status(500).json({message:"Error validating Token."});
+        return res.status(500).json({ message: "Error validating Token." });
     }
-    
+
     next();
-}
+};
 
 export default auth;

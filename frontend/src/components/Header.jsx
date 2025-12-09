@@ -1,33 +1,33 @@
 import { NavLink } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
+import { authCheckRequest } from "../services/authService";
 
 function Header() {
+    const { user } = useContext(AuthContext);
+
     return (
         <header>
             <nav>
                 <section>
-                    <NavLink  to="/" className={({ isActive }) => (isActive ? "active" : undefined)}>
-                            ☀️ Weather App 🌧️
-                        </NavLink>
+                    <NavLink to="/">☀️ Simple Weather 🌧️</NavLink>
                 </section>
                 <ul>
-                    <NavLink  to="/" className={({ isActive }) => (isActive ? "active" : undefined)}>
-                            Início
-                    </NavLink>
                     <li>
-                        <NavLink  to="/Favorites" className={({ isActive }) => (isActive ? "active" : undefined)}>
-                            Favoritos
-                        </NavLink>
+                        <NavLink to="/">Início</NavLink>
+                    </li>
+
+                    <li>
+                        <NavLink to="/Favorites">Favoritos</NavLink>
                     </li>
                     <li>
-                        <NavLink  to="/Login" className={({ isActive }) => (isActive ? "active" : undefined)}>
-                            Login
-                        </NavLink>
+                        <NavLink to="/Login">Login</NavLink>
                     </li>
                     <li>
-                        <NavLink  to="/Register" className={({ isActive }) => (isActive ? "active" : undefined)}>
-                            Cadastrar-se
-                        </NavLink>
+                        <NavLink to="/Register">Cadastrar-se</NavLink>
                     </li>
+
+                    <p>olá {user ? user.nome : "sem usuário"}</p>
                 </ul>
             </nav>
         </header>

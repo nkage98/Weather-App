@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useWeather } from "../hook/useWeather";
 import { useParams } from "react-router-dom";
+import SearchBar from "../components/SearchBar";
 
 function Weather() {
     const { city } = useParams();
@@ -18,9 +18,9 @@ function Weather() {
 
     return (
         <>
-            <form>
-                <input type="text" placeholder="Digite o nome da cidade" />
-            </form>
+            <div>
+                <SearchBar />
+            </div>
             <pre>{JSON.stringify(weatherData, null, 2)}</pre>
         </>
     );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import weatherService from "../services/weatherService";
 
 export function useWeather(city) {
     const [weatherData, setWeatherData] = useState(null);
@@ -13,15 +14,7 @@ export function useWeather(city) {
                 setLoading(true);
                 setError(null);
 
-                const response = await fetch(
-                    `http://localhost:3000/api/weather/city/${city}`
-                );
-
-                if (!response.ok) {
-                    throw new Error("Erro ao buscar dados: ", response.status);
-                }
-
-                const data = await response.json();
+                const data = await weatherService(city);
 
                 if (!isCancelled) {
                     setWeatherData(data);

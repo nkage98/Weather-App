@@ -1,36 +1,41 @@
-import  {validateEmail, validatePassword} from '../utils/utils.js';
-import User from '../models/user.model.js';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-
+import { validateEmail, validatePassword } from "../utils/utils.js";
+import User from "../models/user.model.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const registerController = async (req, res) => {
     const user = req.body;
-    
+
+    console.log("Register attempt:", user);
+
     if (!user.email || !user.password) {
-        return res.status(400).json({message: 'Email and password are required'});
+        return res
+            .status(400)
+            .json({ message: "Email and password are required" });
     }
 
-    if(!validateEmail(user.email)) {
-        return res.status(400).json({message: 'Invalid email format'});
+    if (!validateEmail(user.email)) {
+        return res.status(400).json({ message: "Invalid email format" });
     }
 
-    if(!validatePassword(user.password)) {
-        return res.status(400).json({message: 'Password does not meet criteria'});
+    if (!validatePassword(user.password)) {
+        return res
+            .status(400)
+            .json({ message: "Password does not meet criteria" });
     }
 
     try {
-        const userExists = await User.findOne({email: user.email});
+        const userExists = await User.findOne({ email: user.email });
 
         if (userExists) {
-            return res.status(400).json({message:"User already exists."});
+            return res.status(400).json({ message: "User already exists." });
         }
 
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(user.password, salt);
 
-        const newUser =  new User({
+        const newUser = new User({
             name: user.name,
             email: user.email,
             password: hashedPassword,
@@ -38,109 +43,133 @@ const registerController = async (req, res) => {
 
         console.log(newUser);
 
-        await newUser.save()
-            .then(user => console.log('User created successfully:', user))
-            .catch(err => {
-                console.error('Error creating user:', err);
-                return res.status(500).json({message: 'Error creating user'}, err);
+        await newUser
+            .save()
+            .then((user) => console.log("User created successfully:", user))
+            .catch((err) => {
+                console.error("Error creating user:", err);
+                return res
+                    .status(500)
+                    .json({ message: "Error creating user" }, err);
             });
 
-        return res.status(201).json({message: 'User registered successfully', user: newUser});
+        return res
+            .status(201)
+            .json({ message: "User created successfully", user: newUser });
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Internal server error" }, error);
     }
-    catch (error) {
-        return res.status(500).json({message: 'Internal server error'}, error);
-    }
-}
+};
 
 const loginController = async (req, res) => {
-
     const user = req.body;
 
-    if(!user.email||!user.password) {
-        return res.status(400).json({message: 'Email and password are required'});
+    console.log("Login attempt:", user);
+
+    if (!user.email || !user.password) {
+        console.log("Missing email or password");
+        return res
+            .status(400)
+            .json({ message: "Email and password are required" });
     }
 
     try {
-        const findUser = await User.findOne({email: user.email});
+        const findUser = await User.findOne({ email: user.email });
+
+        console.log("User found:", findUser);
 
         if (!findUser) {
-            return res.status(404).json({message: 'Email or Password incorrect.'});
-        }
-        
-        const isPasswordValid = bcrypt.compare(user.password, findUser.password);
-        
-        if (!isPasswordValid){
-            console.log(isPasswordValid);
-            return res.status(401).json({message: 'Incorrect password.'});
+            console.log("User not found");
+            return res.status(404).json({ message: "User does not exist" });
         }
 
-        const token = jwt.sign( 
-            { id: findUser._id, favoriteCity: findUser.favoriteCities[0]},
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+        const isPasswordValid = await bcrypt.compare(
+            user.password,
+            findUser.password
         );
 
-        console.log("login:", token, findUser.id, findUser.favoriteCities[0]);
+        if (!isPasswordValid) {
+            console.log(isPasswordValid);
+            return res.status(401).json({ message: "Incorrect password." });
+        }
 
-        return res.status(200).json({message: 'Login successful', token: token});
-            
+        const token = jwt.sign(
+            { id: findUser.name, favoriteCity: findUser.favoriteCities[0] },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
 
-  }
-    catch (err) {
-        return res.status(500).json({message: 'Internal server error'}, err);
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 86400000, // 1 day
+        });
+
+        console.log("Login successful for user:", findUser.email);
+
+        return res
+            .status(200)
+            .json({ message: "Login successful" }, { user: user.username });
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" }, err);
     }
-}
+};
 
 const getUserController = async (req, res) => {
     const id = req.userId;
 
-    if (!id){
-        return res.status(401).json({message: 'Unauthorized'});
+    if (!id) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-        const user = await User.findById(id).select('-password');
+        const user = await User.findById(id).select("-password");
         if (!user) {
-            return res.status(404).json({message: 'User not found'});
+            return res.status(404).json({ message: "User not found" });
         }
         console.log(user);
         return res.status(200).json(user);
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" }, err);
     }
-    catch (err){
-        return res.status(500).json({message: 'Internal server error'}, err);
-    }
-}
+};
 
 const updateUserController = async (req, res) => {
     const id = req.userId;
-    const {name} = req.body;
+    const { name } = req.body;
 
     console.log(id);
 
-    if (!id){
-        return res.status(401).json({message: 'Unauthorized'});
+    if (!id) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
         const user = await User.findByIdAndUpdate(
             id,
-            { $set: { 
-                name: name
-            }},
-            { runValidators: true }, 
+            {
+                $set: {
+                    name: name,
+                },
+            },
+            { runValidators: true },
             { new: true }
         );
 
         if (!user) {
-            return res.status(404).json({message: 'User not found'});
+            return res.status(404).json({ message: "User not found" });
         }
 
-        return res.status(200).json({message: 'User updated succesfully'}, user);
+        return res
+            .status(200)
+            .json({ message: "User updated succesfully" }, user);
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" }, err);
     }
-    catch (err){
-        return res.status(500).json({message: 'Internal server error'}, err);
-    }
-}
+};
 
 const deleteUserController = async (req, res) => {
     const id = req.userId;
@@ -148,15 +177,31 @@ const deleteUserController = async (req, res) => {
     try {
         await User.findByIdAndDelete(id);
 
-        return res.status(200).json({message:"User Deleted"});
+        return res.status(200).json({ message: "User Deleted" });
+    } catch (err) {
+        return res.status(500).json({ message: "Internal Server Error" }, err);
     }
-    catch(err){
-        return res.status(500).json({message:"Internal Server Error"}, err);
+};
+
+const authCheckController = async (req, res) => {
+    const token = req.cookies?.token;
+    if (!token) return res.json({ authenticated: false });
+
+    console.log("Auth Check Controller");
+
+    try {
+        const user = jwt.verify(token, process.env.JWT_SECRET);
+        res.json({ authenticated: true, user });
+    } catch {
+        res.json({ authenticated: false });
     }
-}
-
-
+};
 
 export {
-    registerController, loginController, getUserController, updateUserController, deleteUserController
+    authCheckController,
+    registerController,
+    loginController,
+    getUserController,
+    updateUserController,
+    deleteUserController,
 };
