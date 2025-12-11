@@ -11,6 +11,10 @@ body {
     justify-content: center;
 }
 
+main {
+    flex-grow: 1;
+}
+
 .app-container {
     display: flex;
     flex-direction: column;
@@ -21,6 +25,7 @@ body {
 }
 
 .header {
+    position: sticky;
     width: 100%;
     background-color: aqua;
     padding: 1rem;
@@ -40,6 +45,3 @@ body {
     align-items: space-evenly;
     gap: 2rem;
 }
-
-
-

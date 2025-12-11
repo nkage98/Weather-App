@@ -1,10 +1,17 @@
 import { NavLink } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
-import { authCheckRequest } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 function Header() {
-    const { user } = useContext(AuthContext);
+    const { user, handleLogout } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        handleLogout();
+        navigate("/");
+    }
 
     return (
         <header className="header">
@@ -20,14 +27,26 @@ function Header() {
                     <li>
                         <NavLink to="/Favorites">Favoritos</NavLink>
                     </li>
-                    <li>
-                        <NavLink to="/Login">Login</NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="/Register">Cadastrar-se</NavLink>
-                    </li>
 
-                    <p>olá {user ? user.nome : "sem usuário"}</p>
+                    {!user && (
+                        <>
+                            <li>
+                                <NavLink to="/Login">Login</NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/Register">Cadastrar-se</NavLink>
+                            </li>
+                        </>
+                    )}
+
+                    {user && (
+                        <>
+                            <p>Olá, {user.name}</p>
+                            <li>
+                                <NavLink onClick={handleSubmit}>Logout</NavLink>
+                            </li>
+                        </>
+                    )}
                 </ul>
             </nav>
         </header>

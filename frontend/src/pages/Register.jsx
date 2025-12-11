@@ -8,6 +8,7 @@ function Register() {
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const { user, userService, error, loading } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -19,7 +20,7 @@ function Register() {
         }
 
         if (user) {
-            useNavigate("/login");
+            navigate("/login");
             console.log("Usuário Registrado com sucesso!");
         }
     }

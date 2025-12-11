@@ -1,54 +1,78 @@
-import { createContext, useState, useEffect } from "react";
-import { userRequest } from "../services/authService";
-import { authCheckRequest } from "../services/authService";
+import { createContext, useState, useEffect, use } from "react";
+import { login, register, authCheck } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState("");
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
         setLoading(true);
         setError(null);
-        try {
-            const data = authCheckRequest();
 
-            setUser(null);
+        const getUser = async () => {
+            try {
+                const data = await authCheck();
+                setUser(null);
 
-            if (data.authenticated) setUser(data.user);
-        } catch (error) {
-            setError(error);
-        } finally {
-            setLoading(false);
-        }
+                if (data.authenticated) setUser(data.userData);
+                console.log("Authenticated user: ", data);
+            } catch (error) {
+                setError(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        getUser();
     }, []);
 
-    function userService(name, email, password, requestType) {
-        setLoading(true);
-        setError(null);
+    async function handleLogin(email, password) {
+        const data = await login(email, password);
 
-        try {
-            const data = userRequest(name, email, password, requestType);
-            console.log("RequestType: ", requestType);
-            console.log("Dados do usuário: ", data);
-            setUser(data.user);
-        } catch (error) {
-            setError(error);
-        } finally {
-            setLoading(false);
+        if (data.success) {
+            console.log("Login successfull ");
+
+            const response = await authCheck();
+            console.log("Authenticated user: ", response);
+            if (response.authenticated) {
+                setUser(response.userData.name);
+            }
+        } else {
+            console.log("Login failed: ", data.message);
+            setUser(null);
+            setError(data.message);
         }
     }
 
-    function logout() {
+    async function handleRegister(name, email, password) {
+        const data = await authService.register(name, email, password);
+
+        if (data.success) {
+            console.log("Registration successfull ");
+        } else {
+            setUser(null);
+            setError(data.message);
+        }
+    }
+
+    function handleLogout() {
         // todo: implementar logout
         setUser(null);
     }
 
     return (
         <AuthContext.Provider
-            value={{ user, loading, error, userService, logout }}
+            value={{
+                user,
+                loading,
+                error,
+                handleLogin,
+                handleRegister,
+                handleLogout,
+            }}
         >
             {children}
         </AuthContext.Provider>

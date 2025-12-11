@@ -6,21 +6,14 @@ import { useNavigate } from "react-router-dom";
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const { user, userService, error, loading } = useContext(AuthContext);
+    const { user, handleLogin, error } = useContext(AuthContext);
+    const navigate = useNavigate();
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
 
-        userService(email, password, "login");
-
-        if (error) {
-            console.log("Erro ao fazer login: ", error);
-        }
-
-        if (user) {
-            useNavigate("/");
-            console.log("Login bem-sucedido! usuario: ", user.username);
-        }
+        await handleLogin(email, password);
+        navigate("/");
     }
 
     return (

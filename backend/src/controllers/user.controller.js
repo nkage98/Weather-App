@@ -96,7 +96,7 @@ const loginController = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: findUser.name, favoriteCity: findUser.favoriteCities[0] },
+            { name: findUser.name, favoriteCity: findUser.favoriteCities[0] },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
@@ -184,16 +184,20 @@ const deleteUserController = async (req, res) => {
 };
 
 const authCheckController = async (req, res) => {
-    const token = req.cookies?.token;
-    if (!token) return res.json({ authenticated: false });
-
-    console.log("Auth Check Controller");
-
     try {
-        const user = jwt.verify(token, process.env.JWT_SECRET);
-        res.json({ authenticated: true, user });
-    } catch {
-        res.json({ authenticated: false });
+        const token = req.cookies.token;
+        if (!token)
+            return res
+                .status(404)
+                .json({ authenticated: false, message: "No token provided" });
+
+        console.log("Auth Check Controller"); //debug flag
+
+        const userData = jwt.verify(token, process.env.JWT_SECRET);
+
+        return res.status(200).json({ authenticated: true, userData });
+    } catch (error) {
+        return res.status(401).json({ authenticated: false, message: error });
     }
 };
 
