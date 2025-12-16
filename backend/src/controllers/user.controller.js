@@ -1,57 +1,22 @@
-import { validateEmail, validatePassword } from "../utils/utils.js";
-import User from "../models/user.model.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import * as authService from "../services/authService.js";
+import * as userService from "../services/userService.js";
 
 const registerController = async (req, res) => {
-    const user = req.body;
+    const registerDto = req.body;
 
-    console.log("Register attempt:", user);
+    console.log("Register attempt:", registerDto);
 
-    if (!user.email || !user.password) {
+    if (!registerDto.name || !registerDto.email || !registerDto.password) {
         return res
             .status(400)
-            .json({ message: "Email and password are required" });
+            .json({ message: "Name, email and password are required" });
     }
-
-    if (!validateEmail(user.email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-    }
-
-    if (!validatePassword(user.password)) {
-        return res
-            .status(400)
-            .json({ message: "Password does not meet criteria" });
-    }
-
     try {
-        const userExists = await User.findOne({ email: user.email });
-
-        if (userExists) {
-            return res.status(400).json({ message: "User already exists." });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-
-        const hashedPassword = await bcrypt.hash(user.password, salt);
-
-        const newUser = new User({
-            name: user.name,
-            email: user.email,
-            password: hashedPassword,
-        });
-
-        console.log(newUser);
-
-        await newUser
-            .save()
-            .then((user) => console.log("User created successfully:", user))
-            .catch((err) => {
-                console.error("Error creating user:", err);
-                return res
-                    .status(500)
-                    .json({ message: "Error creating user" }, err);
-            });
+        const newUser = await userService.register(
+            registerDto.name,
+            registerDto.email,
+            registerDto.password
+        );
 
         return res
             .status(201)
@@ -64,76 +29,46 @@ const registerController = async (req, res) => {
 };
 
 const loginController = async (req, res) => {
-    const user = req.body;
+    const loginDto = req.body;
 
-    console.log("Login attempt:", user);
-
-    if (!user.email || !user.password) {
-        console.log("Missing email or password");
-        return res
-            .status(400)
-            .json({ message: "Email and password are required" });
+    if (!loginDto.email || !loginDto.password) {
+        res.status(400).json({ message: "Email and password are required" });
     }
 
+    console.log("Login attempt for: ", loginDto);
+
     try {
-        const findUser = await User.findOne({ email: user.email });
-
-        console.log("User found:", findUser);
-
-        if (!findUser) {
-            console.log("User not found");
-            return res.status(404).json({ message: "User does not exist" });
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-            user.password,
-            findUser.password
+        const { user, access_token, refresh_token } = await authService.login(
+            loginDto.email,
+            loginDto.password
         );
 
-        if (!isPasswordValid) {
-            console.log(isPasswordValid);
-            return res.status(401).json({ message: "Incorrect password." });
-        }
-
-        const token = jwt.sign(
-            { name: findUser.name, favoriteCity: findUser.favoriteCities[0] },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
-
-        res.cookie("token", token, {
+        res.cookie("token", refresh_token, {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 86400000, // 1 day
+            maxAge: 1000 * 60 * 60 * 24 * 15, // 15 days
         });
-
-        console.log("Login successful for user:", findUser.email);
 
         return res
             .status(200)
-            .json({ message: "Login successful" }, { user: user.username });
+            .json({ message: "Login successful" }, access_token, user.name);
     } catch (err) {
         return res.status(500).json({ message: "Internal server error" }, err);
     }
 };
 
 const getUserController = async (req, res) => {
-    const id = req.userId;
-
-    if (!id) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
+    const userId = req.userId;
 
     try {
-        const user = await User.findById(id).select("-password");
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        console.log(user);
-        return res.status(200).json(user);
-    } catch (err) {
-        return res.status(500).json({ message: "Internal server error" }, err);
+        const userData = await userService.getUser(userId);
+
+        return res.status(200).json(userData);
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Internal server error" }, error);
     }
 };
 
@@ -183,29 +118,59 @@ const deleteUserController = async (req, res) => {
     }
 };
 
-const authCheckController = async (req, res) => {
+const addFavCityController = async (req, res) => {
+    const { city } = req.body;
+    const id = req.userId;
+
     try {
-        const token = req.cookies.token;
-        if (!token)
-            return res
-                .status(404)
-                .json({ authenticated: false, message: "No token provided" });
+        const user = await User.findByIdAndUpdate(
+            id,
+            {
+                $addToSet: {
+                    favoriteCities: city,
+                },
+            },
+            { runValidators: true },
+            { new: true }
+        );
 
-        console.log("Auth Check Controller"); //debug flag
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-        const userData = jwt.verify(token, process.env.JWT_SECRET);
+        return res.status(200).json({ message: "Favorite city added" }, user);
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" }, err);
+    }
+};
 
-        return res.status(200).json({ authenticated: true, userData });
-    } catch (error) {
-        return res.status(401).json({ authenticated: false, message: error });
+const delFavCityController = async (req, res) => {
+    const id = req.userId;
+    const { city } = req.body;
+
+    try {
+        const user = await User.findById(id);
+
+        user.favoriteCities = user.favoriteCities.filter((c) => c !== city);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        await user.save();
+
+        return res.status(200).json(user.favoriteCities);
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" }, err);
     }
 };
 
 export {
-    authCheckController,
     registerController,
     loginController,
     getUserController,
     updateUserController,
     deleteUserController,
+    addFavCityController,
+    delFavCityController,
 };

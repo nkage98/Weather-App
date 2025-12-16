@@ -1,17 +1,13 @@
 import express from "express";
-import {
-    weatherController,
-    favoriteCityController,
-    getFavoriteCitiesController,
-    deleteFavoriteCityController,
-} from "../controllers/weather.controller.js";
+import { weatherController } from "../controllers/weather.controller.js";
 import {
     loginController,
     registerController,
     updateUserController,
     getUserController,
     deleteUserController,
-    authCheckController,
+    addFavCityController,
+    delFavCityController,
 } from "../controllers/user.controller.js";
 import auth from "../middlewares/auth.middleware.js";
 
@@ -24,7 +20,7 @@ routes.post("/login", loginController);
 
 routes.get("/weather/city/:city", weatherController);
 
-routes.get("/auth-check", authCheckController);
+//routes.get("/auth/refresh", authCheckController);
 
 // private routes
 routes.get("/user/", auth, getUserController);
@@ -33,10 +29,8 @@ routes.put("/user/", auth, updateUserController);
 
 routes.delete("/user/", auth, deleteUserController);
 
-routes.post("/weather/favorite", auth, favoriteCityController);
+routes.post("/weather/favorite", auth, addFavCityController);
 
-routes.get("/weather/favorite", auth, getFavoriteCitiesController);
-
-routes.delete("/weather/favorite", auth, deleteFavoriteCityController);
+routes.delete("/weather/favorite", auth, delFavCityController);
 
 export default routes;

@@ -1,9 +1,4 @@
-import dotenv from "dotenv";
-import User from "../models/user.model.js";
-
-dotenv.config();
-
-const weatherController = async (req, res) => {
+export async function fetchWeather(city) {
     const { city } = req.params;
     const defaultCity = "sao paulo";
     const apiKey = process.env.WEATHER_API_KEY;
@@ -55,6 +50,4 @@ const weatherController = async (req, res) => {
         console.error("Error in weather services:", error);
         res.status(500).send("Internal Server Error");
     }
-};
-
-export { weatherController };
+}
